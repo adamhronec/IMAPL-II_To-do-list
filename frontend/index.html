@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <title>To-Do List</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    #novaUloha {
+      width: 70%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      background-color: #4caf50;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 1rem;
+    }
+
+    li {
+      background: #fff;
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    li span {
+      cursor: pointer;
+      flex-grow: 1;
+    }
+
+    li.done span {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .delete-btn {
+      background-color: #AA2F33;
+      margin-left: 1rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 6px;
+    }
+
+    .delete-btn:hover {
+      background-color: #551719;
+    }
+  </style>
+</head>
+<body>
+  <h1>📝 Môj To-Do List</h1>
+
+  <div style="text-align: center;">
+    <input type="text" id="novaUloha" placeholder="Zadaj novú úlohu" />
+    <button onclick="pridajUlohu()">Pridať</button>
+  </div>
+
+  <ul id="ulohyZoznam"></ul>
+
+  <script>
+    const API_URL = "http://127.0.0.1:5000/ulohy";
+
+    async function nacitajUlohy() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const zoznam = document.getElementById("ulohyZoznam");
+      zoznam.innerHTML = "";
+      data.forEach(uloha => {
+        const li = document.createElement("li");
+        li.className = uloha.done ? "done" : "";
+
+        const text = document.createElement("span");
+        text.textContent = uloha.text;
+        text.onclick = () => toggleHotovo(uloha);
+
+        const btn = document.createElement("button");
+        btn.textContent = "❌";
+        btn.className = "delete-btn";
+        btn.onclick = () => zmazUlohu(uloha.id);
+
+        li.appendChild(text);
+        li.appendChild(btn);
+        if (uloha.done) li.classList.add("done");
+        zoznam.appendChild(li);
+      });
+    }
+
+    async function pridajUlohu() {
+      const input = document.getElementById("novaUloha");
+      const text = input.value.trim();
+      if (!text) return;
+
+      await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, done: false })
+      });
+
+      input.value = "";
+      nacitajUlohy();
+    }
+
+    async function zmazUlohu(id) {
+      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      nacitajUlohy();
+    }
+
+    async function toggleHotovo(uloha) {
+      await fetch(`${API_URL}/${uloha.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: uloha.text, done: !uloha.done })
+      });
+      nacitajUlohy();
+    }
+
+    window.onload = nacitajUlohy;
+  </script>
+<!-- Vlož pred koniec <body> -->
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script>
+  const socket = io("http://127.0.0.1:5000");
+
+  socket.on("update", data => {
+    renderUlohy(data);
+  });
+
+  async function nacitajUlohy() {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    renderUlohy(data);
+  }
+
+  function renderUlohy(data) {
+    const zoznam = document.getElementById("ulohyZoznam");
+    zoznam.innerHTML = "";
+    data.forEach(uloha => {
+      const li = document.createElement("li");
+      li.className = uloha.done ? "done" : "";
+
+      const text = document.createElement("span");
+      text.textContent = uloha.text;
+      text.onclick = () => toggleHotovo(uloha);
+
+      const btn = document.createElement("button");
+      btn.textContent = "❌";
+      btn.className = "delete-btn";
+      btn.onclick = () => zmazUlohu(uloha.id);
+
+      li.appendChild(text);
+      li.appendChild(btn);
+      if (uloha.done) li.classList.add("done");
+      zoznam.appendChild(li);
+    });
+  }
+
+  // ostatné funkcie (pridajUlohu, zmazUlohu, toggleHotovo) ostávajú rovnaké
+</script>
+</body>
+</html>

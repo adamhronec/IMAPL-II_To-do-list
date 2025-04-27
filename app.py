@@ -25,14 +25,14 @@ def pridaj_ulohu():
     }
     ulohy.append(nova_ul)
     next_id += 1
-    socketio.emit("update", ulohy)  # 🔄 Broadcast
+    socketio.emit("update", ulohy)  
     return jsonify(nova_ul), 201
 
 @app.route("/ulohy/<int:uloha_id>", methods=["DELETE"])
 def zmaz_ulohu(uloha_id):
     global ulohy
     ulohy = [u for u in ulohy if u["id"] != uloha_id]
-    socketio.emit("update", ulohy)  # 🔄 Broadcast
+    socketio.emit("update", ulohy)  
     return jsonify({"message": "Úloha zmazaná"}), 200
 
 @app.route("/ulohy/<int:uloha_id>", methods=["PUT"])
@@ -42,7 +42,7 @@ def uprav_ulohu(uloha_id):
         if uloha["id"] == uloha_id:
             uloha["text"] = data.get("text", uloha["text"])
             uloha["done"] = data.get("done", uloha.get("done", False))
-            socketio.emit("update", ulohy)  # 🔄 Broadcast
+            socketio.emit("update", ulohy)  
             return jsonify(uloha)
     return jsonify({"error": "Úloha nenájdená"}), 404
 

@@ -16,6 +16,8 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(200), nullable=False)
     description = db.Column(db.String(300), nullable=True)
+    due_date = db.Column(db.String(20), nullable=True)
+    user_name = db.Column(db.String(100), nullable=False)
     done = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -24,6 +26,8 @@ class Task(db.Model):
             'id': self.id,
             'text': self.text,
             'description': self.description,
+            'due_date': self.due_date,
+            'user_name': self.user_name,
             'done': self.done
         }
 
@@ -39,7 +43,11 @@ def broadcast_tasks():
 
 @app.route("/ulohy", methods=["GET"])
 def get_ulohy():
-    tasks = Task.query.all()
+    user_name = request.args.get('user_name')
+    if user_name:
+        tasks = Task.query.filter_by(user_name=user_name).all()
+    else:
+        tasks = Task.query.all()
     return jsonify([task.to_dict() for task in tasks])
 
 @app.route("/ulohy", methods=["POST"])
@@ -48,6 +56,8 @@ def pridaj_ulohu():
     nova_ul = Task(
         text=data.get("text", ""),
         description=data.get("description", ""),
+        due_date=data.get("due_date", ""),
+        user_name=data.get("user_name", "anonym"),
         done=data.get("done", False)
     )
     db.session.add(nova_ul)
@@ -73,6 +83,7 @@ def uprav_ulohu(uloha_id):
         data = request.json
         task.text = data.get("text", task.text)
         task.description = data.get("description", task.description)
+        task.due_date = data.get("due_date", task.due_date)
         task.done = data.get("done", task.done)
         db.session.commit()
         broadcast_tasks()

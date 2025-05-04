@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -8,7 +7,6 @@ app = Flask(__name__)
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tasks.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-socketio = SocketIO(app, cors_allowed_origins="*")
 db = SQLAlchemy(app)
 
 # Definícia databázového modelu
@@ -35,12 +33,6 @@ class Task(db.Model):
 with app.app_context():
     db.create_all()
 
-# Pomocná funkcia na broadcast aktuálnych úloh
-def broadcast_tasks():
-    tasks = Task.query.all()
-    tasks_json = [task.to_dict() for task in tasks]
-    socketio.emit("update", tasks_json)
-
 @app.route("/ulohy", methods=["GET"])
 def get_ulohy():
     user_name = request.args.get('user_name')
@@ -62,7 +54,6 @@ def pridaj_ulohu():
     )
     db.session.add(nova_ul)
     db.session.commit()
-    broadcast_tasks()
     return jsonify(nova_ul.to_dict()), 201
 
 @app.route("/ulohy/<int:uloha_id>", methods=["DELETE"])
@@ -71,7 +62,6 @@ def zmaz_ulohu(uloha_id):
     if task:
         db.session.delete(task)
         db.session.commit()
-        broadcast_tasks()
         return jsonify({"message": "Úloha zmazaná"}), 200
     else:
         return jsonify({"error": "Úloha nenájdená"}), 404
@@ -86,16 +76,9 @@ def uprav_ulohu(uloha_id):
         task.due_date = data.get("due_date", task.due_date)
         task.done = data.get("done", task.done)
         db.session.commit()
-        broadcast_tasks()
         return jsonify(task.to_dict())
     else:
         return jsonify({"error": "Úloha nenájdená"}), 404
 
-@socketio.on("connect")
-def on_connect():
-    tasks = Task.query.all()
-    tasks_json = [task.to_dict() for task in tasks]
-    emit("update", tasks_json)
-
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    app.run(debug=True)

@@ -25,7 +25,7 @@ def test_server_connection():
 def test_create_task():
     data = {
         "text": "Test úloha",
-        "description": "Toto je test",
+        "description": "Toto je test cases",
         "due_date": "2025-12-31",
         "user_name": "tester"
     }

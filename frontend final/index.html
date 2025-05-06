@@ -117,7 +117,6 @@
   <!-- Zoznam úloh -->
   <ul id="ulohyZoznam"></ul>
 
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
   <script>
     let aktualnyPouzivatel = null;
 
@@ -134,9 +133,13 @@
     }
 
     async function nacitajUlohy() {
-      const res = await fetch(`http://127.0.0.1:5000/ulohy?user_name=${encodeURIComponent(aktualnyPouzivatel)}`);
-      const data = await res.json();
-      renderUlohy(data);
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/ulohy?user_name=${encodeURIComponent(aktualnyPouzivatel)}`);
+        const data = await res.json();
+        renderUlohy(data);
+      } catch (err) {
+        console.error("Chyba pri načítaní úloh:", err);
+      }
     }
 
     async function pridajUlohu() {
@@ -149,22 +152,26 @@
         return;
       }
 
-      await fetch("http://127.0.0.1:5000/ulohy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          description,
-          due_date,
-          done: false,
-          user_name: aktualnyPouzivatel
-        })
-      });
+      try {
+        await fetch("http://127.0.0.1:5000/ulohy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text,
+            description,
+            due_date,
+            done: false,
+            user_name: aktualnyPouzivatel
+          })
+        });
 
-      document.getElementById("novaUloha").value = "";
-      document.getElementById("popisUlohy").value = "";
-      document.getElementById("doKedy").value = "";
-      nacitajUlohy();
+        document.getElementById("novaUloha").value = "";
+        document.getElementById("popisUlohy").value = "";
+        document.getElementById("doKedy").value = "";
+        nacitajUlohy();
+      } catch (err) {
+        console.error("Chyba pri pridávaní úlohy:", err);
+      }
     }
 
     function renderUlohy(data) {
@@ -220,17 +227,21 @@
     }
 
     async function toggleDone(uloha) {
-      await fetch(`http://127.0.0.1:5000/ulohy/${uloha.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: uloha.text,
-          description: uloha.description,
-          due_date: uloha.due_date,
-          done: !uloha.done
-        })
-      });
-      nacitajUlohy();
+      try {
+        await fetch(`http://127.0.0.1:5000/ulohy/${uloha.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: uloha.text,
+            description: uloha.description,
+            due_date: uloha.due_date,
+            done: !uloha.done
+          })
+        });
+        nacitajUlohy();
+      } catch (err) {
+        console.error("Chyba pri aktualizácii úlohy:", err);
+      }
     }
 
     async function upravUlohu(uloha) {
@@ -238,28 +249,36 @@
       const novyPopis = prompt("Uprav popis úlohy:", uloha.description || "");
       const novyDatum = prompt("Uprav dátum (rrrr-mm-dd):", uloha.due_date || "");
 
-      await fetch(`http://127.0.0.1:5000/ulohy/${uloha.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: novyText,
-          description: novyPopis,
-          due_date: novyDatum,
-          done: uloha.done
-        })
-      });
-      nacitajUlohy();
+      if (!novyText) return;
+
+      try {
+        await fetch(`http://127.0.0.1:5000/ulohy/${uloha.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: novyText,
+            description: novyPopis,
+            due_date: novyDatum,
+            done: uloha.done
+          })
+        });
+        nacitajUlohy();
+      } catch (err) {
+        console.error("Chyba pri úprave úlohy:", err);
+      }
     }
 
     async function zmazUlohu(id) {
-      await fetch(`http://127.0.0.1:5000/ulohy/${id}`, { method: "DELETE" });
-      nacitajUlohy();
+      try {
+        await fetch(`http://127.0.0.1:5000/ulohy/${id}`, {
+          method: "DELETE"
+        });
+        nacitajUlohy();
+      } catch (err) {
+        console.error("Chyba pri mazaní úlohy:", err);
+      }
     }
-
-    const socket = io("http://127.0.0.1:5000");
-    socket.on("update", () => {
-      if (aktualnyPouzivatel) nacitajUlohy();
-    });
   </script>
 </body>
 </html>
+

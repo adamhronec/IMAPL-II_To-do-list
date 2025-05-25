@@ -2,7 +2,7 @@
 <html lang="sk">
 <head>
   <meta charset="UTF-8">
-  <title>To-Do List - Simulátor</title>
+  <title>To-Do List</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -94,7 +94,7 @@
   </style>
 </head>
 <body>
-  <h1>📝 Môj To-Do List (Simulátor)</h1>
+  <h1>📝 Môj To-Do List</h1>
 
   <!-- Login sekcia -->
   <div id="loginSection">
@@ -119,6 +119,8 @@
 
   <script>
     let aktualnyPouzivatel = null;
+    const URL = "http://82.25.97.52:8095";
+    //const URL = "http://127.0.0.1:5000";
 
     function prihlasitSa() {
       const meno = document.getElementById("menoPouzivatela").value.trim();
@@ -134,7 +136,7 @@
 
     async function nacitajUlohy() {
       try {
-        const res = await fetch(`http://127.0.0.1:5000/ulohy?user_name=${encodeURIComponent(aktualnyPouzivatel)}`);
+        const res = await fetch(`${URL}/ulohy?user_name=${encodeURIComponent(aktualnyPouzivatel)}`);
         const data = await res.json();
         renderUlohy(data);
       } catch (err) {
@@ -153,7 +155,7 @@
       }
 
       try {
-        await fetch("http://127.0.0.1:5000/ulohy", {
+        await fetch(`${URL}/ulohy`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -228,7 +230,7 @@
 
     async function toggleDone(uloha) {
       try {
-        await fetch(`http://127.0.0.1:5000/ulohy/${uloha.id}`, {
+        await fetch(`${URL}/ulohy/${uloha.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -252,7 +254,7 @@
       if (!novyText) return;
 
       try {
-        await fetch(`http://127.0.0.1:5000/ulohy/${uloha.id}`, {
+        await fetch(`${URL}/ulohy/${uloha.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -270,7 +272,7 @@
 
     async function zmazUlohu(id) {
       try {
-        await fetch(`http://127.0.0.1:5000/ulohy/${id}`, {
+        await fetch(`${URL}/ulohy/${id}`, {
           method: "DELETE"
         });
         nacitajUlohy();

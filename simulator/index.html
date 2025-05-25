@@ -70,6 +70,8 @@
 
 <script>
   let aktualnyPouzivatel = null;
+  const URL = "http://82.25.97.52:8095";
+  //const URL = "http://127.0.0.1:5000";
 
   function prihlasitSa() {
     const menoInput = document.getElementById("menoPouzivatela");
@@ -87,7 +89,7 @@
   async function nacitajUlohy() {
     if (!aktualnyPouzivatel) return;
     try {
-      const res = await fetch(`http://127.0.0.1:5000/ulohy?user_name=${encodeURIComponent(aktualnyPouzivatel)}`);
+      const res = await fetch(`${URL}/ulohy?user_name=${encodeURIComponent(aktualnyPouzivatel)}`);
       const data = await res.json();
       renderUlohy(data);
     } catch (err) {
@@ -131,7 +133,7 @@
 
   async function toggleDone(uloha) {
     try {
-      await fetch(`http://127.0.0.1:5000/ulohy/${uloha.id}`, {
+      await fetch(`${URL}/ulohy/${uloha.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

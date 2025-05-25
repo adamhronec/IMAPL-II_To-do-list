@@ -81,4 +81,5 @@ def uprav_ulohu(uloha_id):
         return jsonify({"error": "Úloha nenájdená"}), 404
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8095, debug=True)
+    #app.run(debug=True)
